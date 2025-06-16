@@ -7,7 +7,9 @@ class AuthCubit extends Cubit<AuthState> {
   final AuthRepo authRepo;
   AppUser? _currentUser;
 
-  AuthCubit(this.authRepo) : super(AuthInitial());
+  AuthCubit({required this.authRepo}) : super(AuthInitial());
+
+  AppUser? get currentUser => _currentUser;
 
   void checkAuth() async {
     emit(AuthLoading());
@@ -87,5 +89,20 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  AppUser? get currentUser => _currentUser;
+  Future<void> signInWithGoogle() async {
+    emit(AuthLoading());
+    try {
+      final AppUser? user = await authRepo.signInWithGoogle();
+      if (user != null) {
+        _currentUser = user;
+        emit(AuthAuthenticated(user));
+      } else {
+        emit(AuthUnauthenticated());
+      }
+    } catch (e) {
+      emit(AuthError(e.toString()));
+      emit(AuthUnauthenticated());
+      print("Error signing in with Google: $e");
+    }
+  }
 }

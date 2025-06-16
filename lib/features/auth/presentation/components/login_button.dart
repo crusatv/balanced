@@ -16,8 +16,11 @@ class LoginButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Center(
-          child:
-              Text(text, style: TextStyle(color: Colors.white, fontSize: 14)),
+          child: Text(text,
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500)),
         ),
       ),
     );

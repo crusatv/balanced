@@ -2,54 +2,84 @@ import 'package:balanced/features/auth/presentation/components/continue_with_but
 import 'package:balanced/features/auth/presentation/components/login_button.dart';
 import 'package:balanced/features/auth/presentation/components/login_texfield.dart';
 import 'package:balanced/features/auth/presentation/cubits/auth_cubit.dart';
-import 'package:balanced/features/auth/presentation/cubits/auth_states.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class LoginPage extends StatefulWidget {
+class RegisterPage extends StatefulWidget {
   final void Function()? togglePage;
-  const LoginPage({super.key, required this.togglePage});
+
+  const RegisterPage({super.key, required this.togglePage});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
-  void login() {
+  final String _emailRegex =
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
+  final String _passwordRegex = r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$';
+
+  void register() {
     final String email = emailController.text;
     final String password = passwordController.text;
+    final String confirmPassword = confirmPasswordController.text;
 
     final authCubit = context.read<AuthCubit>();
 
-    // Aquí puedes agregar la lógica de autenticación
-    if (email.isEmpty || password.isEmpty) {
+    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Por favor, completa todos los campos')),
       );
       return;
     }
+    // Validate email
+    if (!RegExp(_emailRegex).hasMatch(email)) {
+      // Show error for invalid email
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Correo electrónico no válido')),
+      );
+      return;
+    }
 
-    authCubit.signIn(email, password).then((_) {
-      if (authCubit.state is AuthAuthenticated) {
-        // Navegar a la página principal o mostrar un mensaje de éxito
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Inicio de sesión exitoso')),
-        );
-      } else if (authCubit.state is AuthError) {
-        // Mostrar mensaje de error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al iniciar sesión')),
-        );
-      }
-    });
+    // Validate password
+    if (!RegExp(_passwordRegex).hasMatch(password)) {
+      // Show error for invalid password
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('La contraseña debe tener al menos 8 caracteres, '
+                '1 letra y 1 número')),
+      );
+      return;
+    }
+
+    // Check if passwords match
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Las contraseñas no coinciden')),
+      );
+      return;
+    }
+
+    authCubit.signUp(email, password);
+
+    @override
+    void dispose() {
+      emailController.dispose();
+      passwordController.dispose();
+      confirmPasswordController.dispose();
+      super.dispose();
+    }
+
+    dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final authCubit = context.read<AuthCubit>();
     return Scaffold(
       body: Center(
           child: Padding(
@@ -60,7 +90,7 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 60),
               Image(image: AssetImage("assets/img/LogoBlack.png"), height: 30),
               const SizedBox(height: 40),
-              Text("Inicia sesión para continuar",
+              Text("Crea una cuenta para empezar",
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
               const SizedBox(height: 20),
               LoginTexfield(
@@ -75,24 +105,21 @@ class _LoginPageState extends State<LoginPage> {
                 obscureText: true,
               ),
               const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text("¿Has olvidado la contraseña?",
-                      style:
-                          TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                ],
+              LoginTexfield(
+                controller: confirmPasswordController,
+                hintText: "Repetir contraseña",
+                obscureText: true,
               ),
               const SizedBox(height: 20),
-              LoginButton(onTap: login, text: "Iniciar sesión"),
+              LoginButton(onTap: register, text: "Registrarse"),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("¿No tienes cuenta? ", style: TextStyle(fontSize: 12)),
+                  Text("Ya tienes cuenta? ", style: TextStyle(fontSize: 12)),
                   GestureDetector(
                     onTap: widget.togglePage,
-                    child: Text("Regístrate ahora",
+                    child: Text("Inicia sesión",
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -107,9 +134,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 20),
               ContinueWithButton(
-                  onTap: () async {
-                    authCubit.signInWithGoogle();
-                  },
+                  onTap: () {},
                   text: "Continúa con Google",
                   imagePath: "assets/img/googleg.png"),
               const SizedBox(height: 10),

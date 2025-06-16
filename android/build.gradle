@@ -1,3 +1,23 @@
+buildscript {
+    ext.kotlin_version = '2.1.0' // o la última estable: https://kotlinlang.org/docs/releases.html
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.gms:google-services:4.3.15' // o 4.4.2 si quieres actualizar
+    }
+}
+
+
+plugins {
+  // Add the Google services Gradle plugin
+  id 'com.google.gms.google-services' version '4.3.15' apply false
+
+}
+
+
 allprojects {
     repositories {
         google()
